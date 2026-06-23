@@ -249,9 +249,9 @@ HOSPITAL_CONFIGS = {
     },
 }
 
-
 def generate_base_data(hospital_id: str, hospital_name: str, rows: int) -> pd.DataFrame:
     species_list = ["Dog", "Cat", "Rabbit", "Bird"]
+
     breeds = {
         "Dog": ["Labrador", "Beagle", "Pug", "German Shepherd"],
         "Cat": ["Persian", "Siamese", "Maine Coon"],
@@ -280,20 +280,31 @@ def generate_base_data(hospital_id: str, hospital_name: str, rows: int) -> pd.Da
         "Dental Cleaning",
     ]
 
-    data = []
+    # Create owners
+    owners = []
 
-    for i in range(1, rows + 1):
+    for i in range(1, 5001):
+        owners.append({
+            "owner_id": f"{hospital_id}_O{i}",
+            "owner_first_name": fake.first_name(),
+            "owner_last_name": fake.last_name(),
+            "owner_phone": fake.msisdn()[:10],
+            "owner_email": fake.email(),
+            "owner_address": fake.street_address(),
+            "owner_city": fake.city(),
+            "owner_state": fake.state(),
+        })
+
+    # Create pets and link them to owners
+    pets = []
+
+    for i in range(1, 10001):
+        owner = random.choice(owners)
+
         species = random.choice(species_list)
-        invoice_amount = round(random.uniform(500, 15000), 2)
-        diagnosis_code, diagnosis_description = random.choice(diagnosis_list)
 
-        data.append({
-            "visit_id": f"{hospital_id}_V{i}",
-            "visit_date": fake.date_between(start_date="-2y", end_date="today"),
-            "hospital_id": hospital_id,
-            "hospital_name": hospital_name,
-
-            "pet_id": f"{hospital_id}_P{random.randint(1, 10000)}",
+        pets.append({
+            "pet_id": f"{hospital_id}_P{i}",
             "pet_name": fake.first_name(),
             "species": species,
             "breed": random.choice(breeds[species]),
@@ -302,14 +313,49 @@ def generate_base_data(hospital_id: str, hospital_name: str, rows: int) -> pd.Da
             "weight_kg": round(random.uniform(1, 45), 2),
             "microchip_number": fake.uuid4(),
 
-            "owner_id": f"{hospital_id}_O{random.randint(1, 5000)}",
-            "owner_first_name": fake.first_name(),
-            "owner_last_name": fake.last_name(),
-            "owner_phone": fake.msisdn()[:10],
-            "owner_email": fake.email(),
-            "owner_address": fake.street_address(),
-            "owner_city": fake.city(),
-            "owner_state": fake.state(),
+            "owner_id": owner["owner_id"],
+            "owner_first_name": owner["owner_first_name"],
+            "owner_last_name": owner["owner_last_name"],
+            "owner_phone": owner["owner_phone"],
+            "owner_email": owner["owner_email"],
+            "owner_address": owner["owner_address"],
+            "owner_city": owner["owner_city"],
+            "owner_state": owner["owner_state"],
+        })
+
+    # Generate visits
+    data = []
+
+    for i in range(1, rows + 1):
+        pet = random.choice(pets)
+
+        invoice_amount = round(random.uniform(500, 15000), 2)
+        diagnosis_code, diagnosis_description = random.choice(diagnosis_list)
+
+        data.append({
+            "visit_id": f"{hospital_id}_V{i}",
+            "visit_date": fake.date_between(start_date="-2y", end_date="today"),
+
+            "hospital_id": hospital_id,
+            "hospital_name": hospital_name,
+
+            "pet_id": pet["pet_id"],
+            "pet_name": pet["pet_name"],
+            "species": pet["species"],
+            "breed": pet["breed"],
+            "gender": pet["gender"],
+            "birth_date": pet["birth_date"],
+            "weight_kg": pet["weight_kg"],
+            "microchip_number": pet["microchip_number"],
+
+            "owner_id": pet["owner_id"],
+            "owner_first_name": pet["owner_first_name"],
+            "owner_last_name": pet["owner_last_name"],
+            "owner_phone": pet["owner_phone"],
+            "owner_email": pet["owner_email"],
+            "owner_address": pet["owner_address"],
+            "owner_city": pet["owner_city"],
+            "owner_state": pet["owner_state"],
 
             "doctor_id": f"{hospital_id}_D{random.randint(1, 100)}",
             "doctor_name": fake.name(),
@@ -328,6 +374,7 @@ def generate_base_data(hospital_id: str, hospital_name: str, rows: int) -> pd.Da
             "invoice_amount": invoice_amount,
             "tax_amount": round(invoice_amount * 0.18, 2),
             "discount_amount": round(random.uniform(0, 500), 2),
+
             "payment_method": random.choice(payment_methods),
             "payment_status": random.choice(payment_statuses),
             "insurance_provider": random.choice(["None", "PetCare", "VetSecure"]),
@@ -337,7 +384,6 @@ def generate_base_data(hospital_id: str, hospital_name: str, rows: int) -> pd.Da
         })
 
     return pd.DataFrame(data)
-
 
 def inject_controlled_messy_data(df: pd.DataFrame) -> pd.DataFrame:
     df = df.copy()
