@@ -1,9 +1,9 @@
+import os
 import dlt
 from pyspark.sql.functions import current_timestamp, col, regexp_extract, sha2, concat_ws, to_json, struct
 from pyspark.sql.types import StringType
 
-RAW_BASE_PATH = "s3a://vet-data-platform/raw/"
-# SCHEMA_LOCATION = "dbfs:/FileStore/bronze_schema_checkpoint"
+RAW_BASE_PATH = os.getenv("RAW_BASE_PATH", "s3a://vet-data-platform/raw/")
 
 @dlt.table(
     comment="Raw bronze layer for hospital files with variable source schemas.",
