@@ -1,20 +1,35 @@
 import random
 from datetime import datetime
 from io import StringIO
+import os
 
 import boto3
 import pandas as pd
 from faker import Faker
+from dotenv import load_dotenv
+
+load_dotenv()
+
+s3_client = boto3.client(
+    "s3",
+    aws_access_key_id=os.getenv("AWS_ACCESS_KEY_ID"),
+    aws_secret_access_key=os.getenv("AWS_SECRET_ACCESS_KEY"),
+    region_name=os.getenv("AWS_REGION"),
+)
 
 fake = Faker("en_IN")
 
-BUCKET_NAME = "vet-data-platform"  # change this to your actual S3 bucket name
+BUCKET_NAME = "vet-data-platform"
 TOTAL_ROWS_PER_HOSPITAL = 50000
+
 
 HOSPITAL_CONFIGS = {
     "hospital_a": {
         "hospital_id": "H001",
         "hospital_name": "Hospital A",
+        "hospital_address": "12 MG Road, Bengaluru, Karnataka",
+        "hospital_phone": "9876543210",
+        "hospital_email": "contact@hospitala.com",
         "file_prefix": "hospital_a_export",
         "s3_folder": "hospital_a",
         "column_mapping": {
@@ -22,6 +37,9 @@ HOSPITAL_CONFIGS = {
             "visit_date": "visit_date",
             "hospital_id": "hospital_id",
             "hospital_name": "hospital_name",
+            "hospital_address": "hospital_address",
+            "hospital_phone": "hospital_phone",
+            "hospital_email": "hospital_email",
             "pet_id": "pet_id",
             "pet_name": "pet_name",
             "species": "species",
@@ -33,13 +51,23 @@ HOSPITAL_CONFIGS = {
             "owner_id": "owner_id",
             "owner_first_name": "owner_first_name",
             "owner_last_name": "owner_last_name",
+            "owner_gender": "owner_gender",
+            "owner_dob": "owner_dob",
             "owner_phone": "owner_phone",
             "owner_email": "owner_email",
             "owner_address": "owner_address",
             "owner_city": "owner_city",
             "owner_state": "owner_state",
             "doctor_id": "doctor_id",
-            "doctor_name": "doctor_name",
+            "doctor_first_name": "doctor_first_name",
+            "doctor_last_name": "doctor_last_name",
+            "doctor_gender": "doctor_gender",
+            "doctor_dob": "doctor_dob",
+            "doctor_phone": "doctor_phone",
+            "doctor_email": "doctor_email",
+            "doctor_address": "doctor_address",
+            "doctor_city": "doctor_city",
+            "doctor_state": "doctor_state",
             "doctor_specialization": "doctor_specialization",
             "appointment_type": "appointment_type",
             "diagnosis_code": "diagnosis_code",
@@ -59,9 +87,13 @@ HOSPITAL_CONFIGS = {
             "updated_timestamp": "updated_timestamp",
         },
     },
+
     "hospital_b": {
         "hospital_id": "H002",
         "hospital_name": "Hospital B",
+        "hospital_address": "45 Residency Road, Bengaluru, Karnataka",
+        "hospital_phone": "9876543211",
+        "hospital_email": "contact@hospitalb.com",
         "file_prefix": "hospital_b_export",
         "s3_folder": "hospital_b",
         "column_mapping": {
@@ -69,6 +101,9 @@ HOSPITAL_CONFIGS = {
             "visit_date": "appointment_date",
             "hospital_id": "clinic_code",
             "hospital_name": "clinic_name",
+            "hospital_address": "clinic_address",
+            "hospital_phone": "clinic_phone",
+            "hospital_email": "clinic_email",
             "pet_id": "animal_id",
             "pet_name": "animal_name",
             "species": "animal_type",
@@ -80,13 +115,23 @@ HOSPITAL_CONFIGS = {
             "owner_id": "customer_id",
             "owner_first_name": "customer_first_name",
             "owner_last_name": "customer_last_name",
+            "owner_gender": "customer_gender",
+            "owner_dob": "customer_dob",
             "owner_phone": "contact_number",
             "owner_email": "email_address",
             "owner_address": "customer_address",
             "owner_city": "customer_city",
             "owner_state": "customer_state",
             "doctor_id": "vet_id",
-            "doctor_name": "vet_name",
+            "doctor_first_name": "vet_first_name",
+            "doctor_last_name": "vet_last_name",
+            "doctor_gender": "vet_gender",
+            "doctor_dob": "vet_dob",
+            "doctor_phone": "vet_contact_number",
+            "doctor_email": "vet_email_address",
+            "doctor_address": "vet_address",
+            "doctor_city": "vet_city",
+            "doctor_state": "vet_state",
             "doctor_specialization": "speciality",
             "appointment_type": "appointment_category",
             "diagnosis_code": "disease_code",
@@ -106,9 +151,13 @@ HOSPITAL_CONFIGS = {
             "updated_timestamp": "modified_at",
         },
     },
+
     "hospital_c": {
         "hospital_id": "H003",
         "hospital_name": "Hospital C",
+        "hospital_address": "78 Indiranagar, Bengaluru, Karnataka",
+        "hospital_phone": "9876543212",
+        "hospital_email": "contact@hospitalc.com",
         "file_prefix": "hospital_c_export",
         "s3_folder": "hospital_c",
         "column_mapping": {
@@ -116,6 +165,9 @@ HOSPITAL_CONFIGS = {
             "visit_date": "visit_timestamp",
             "hospital_id": "facility_id",
             "hospital_name": "facility_name",
+            "hospital_address": "facility_address",
+            "hospital_phone": "facility_phone",
+            "hospital_email": "facility_email",
             "pet_id": "patient_id",
             "pet_name": "patient_name",
             "species": "patient_species",
@@ -127,13 +179,23 @@ HOSPITAL_CONFIGS = {
             "owner_id": "owner_ref",
             "owner_first_name": "client_first_name",
             "owner_last_name": "client_last_name",
+            "owner_gender": "client_gender",
+            "owner_dob": "client_dob",
             "owner_phone": "client_mobile",
             "owner_email": "client_email",
             "owner_address": "client_address",
             "owner_city": "client_city",
             "owner_state": "client_state",
             "doctor_id": "physician_id",
-            "doctor_name": "physician_name",
+            "doctor_first_name": "physician_first_name",
+            "doctor_last_name": "physician_last_name",
+            "doctor_gender": "physician_gender",
+            "doctor_dob": "physician_dob",
+            "doctor_phone": "physician_mobile",
+            "doctor_email": "physician_email",
+            "doctor_address": "physician_address",
+            "doctor_city": "physician_city",
+            "doctor_state": "physician_state",
             "doctor_specialization": "physician_speciality",
             "appointment_type": "visit_type",
             "diagnosis_code": "condition_code",
@@ -153,9 +215,13 @@ HOSPITAL_CONFIGS = {
             "updated_timestamp": "last_updated_ts",
         },
     },
+
     "hospital_d": {
         "hospital_id": "H004",
         "hospital_name": "Hospital D",
+        "hospital_address": "22 Jayanagar, Bengaluru, Karnataka",
+        "hospital_phone": "9876543213",
+        "hospital_email": "contact@hospitald.com",
         "file_prefix": "hospital_d_export",
         "s3_folder": "hospital_d",
         "column_mapping": {
@@ -163,6 +229,9 @@ HOSPITAL_CONFIGS = {
             "visit_date": "encounter_date",
             "hospital_id": "branch_id",
             "hospital_name": "branch_name",
+            "hospital_address": "branch_address",
+            "hospital_phone": "branch_phone",
+            "hospital_email": "branch_email",
             "pet_id": "pet_identifier",
             "pet_name": "pet_full_name",
             "species": "species_name",
@@ -174,13 +243,23 @@ HOSPITAL_CONFIGS = {
             "owner_id": "owner_identifier",
             "owner_first_name": "owner_first",
             "owner_last_name": "owner_last",
+            "owner_gender": "owner_gender",
+            "owner_dob": "owner_birth_date",
             "owner_phone": "phone_number",
             "owner_email": "email",
             "owner_address": "street",
             "owner_city": "city",
             "owner_state": "state",
             "doctor_id": "doctor_identifier",
-            "doctor_name": "doctor_full_name",
+            "doctor_first_name": "doctor_first",
+            "doctor_last_name": "doctor_last",
+            "doctor_gender": "doctor_gender",
+            "doctor_dob": "doctor_birth_date",
+            "doctor_phone": "doctor_phone_number",
+            "doctor_email": "doctor_email",
+            "doctor_address": "doctor_street",
+            "doctor_city": "doctor_city",
+            "doctor_state": "doctor_state",
             "doctor_specialization": "specialization",
             "appointment_type": "encounter_type",
             "diagnosis_code": "procedure_code",
@@ -200,9 +279,13 @@ HOSPITAL_CONFIGS = {
             "updated_timestamp": "updated_on",
         },
     },
+
     "hospital_e": {
         "hospital_id": "H005",
         "hospital_name": "Hospital E",
+        "hospital_address": "90 Whitefield, Bengaluru, Karnataka",
+        "hospital_phone": "9876543214",
+        "hospital_email": "contact@hospitale.com",
         "file_prefix": "hospital_e_export",
         "s3_folder": "hospital_e",
         "column_mapping": {
@@ -210,6 +293,9 @@ HOSPITAL_CONFIGS = {
             "visit_date": "case_date",
             "hospital_id": "center_id",
             "hospital_name": "center_name",
+            "hospital_address": "center_address",
+            "hospital_phone": "center_phone",
+            "hospital_email": "center_email",
             "pet_id": "pet_code",
             "pet_name": "pet_nickname",
             "species": "species_category",
@@ -221,13 +307,23 @@ HOSPITAL_CONFIGS = {
             "owner_id": "guardian_id",
             "owner_first_name": "guardian_first_name",
             "owner_last_name": "guardian_last_name",
+            "owner_gender": "guardian_gender",
+            "owner_dob": "guardian_dob",
             "owner_phone": "guardian_contact",
             "owner_email": "guardian_email",
             "owner_address": "guardian_address",
             "owner_city": "guardian_city",
             "owner_state": "guardian_state",
             "doctor_id": "staff_id",
-            "doctor_name": "staff_name",
+            "doctor_first_name": "staff_first_name",
+            "doctor_last_name": "staff_last_name",
+            "doctor_gender": "staff_gender",
+            "doctor_dob": "staff_dob",
+            "doctor_phone": "staff_contact",
+            "doctor_email": "staff_email",
+            "doctor_address": "staff_address",
+            "doctor_city": "staff_city",
+            "doctor_state": "staff_state",
             "doctor_specialization": "staff_role",
             "appointment_type": "case_type",
             "diagnosis_code": "diagnosis_id",
@@ -249,9 +345,19 @@ HOSPITAL_CONFIGS = {
     },
 }
 
-def generate_base_data(hospital_id: str, hospital_name: str, rows: int) -> pd.DataFrame:
-    species_list = ["Dog", "Cat", "Rabbit", "Bird"]
 
+def generate_base_data(config: dict, rows: int) -> pd.DataFrame:
+    hospital_id = config["hospital_id"]
+
+    hospital = {
+        "hospital_id": config["hospital_id"],
+        "hospital_name": config["hospital_name"],
+        "hospital_address": config["hospital_address"],
+        "hospital_phone": config["hospital_phone"],
+        "hospital_email": config["hospital_email"],
+    }
+
+    species_list = ["Dog", "Cat", "Rabbit", "Bird"]
     breeds = {
         "Dog": ["Labrador", "Beagle", "Pug", "German Shepherd"],
         "Cat": ["Persian", "Siamese", "Maine Coon"],
@@ -280,27 +386,40 @@ def generate_base_data(hospital_id: str, hospital_name: str, rows: int) -> pd.Da
         "Dental Cleaning",
     ]
 
-    # Create owners
     owners = []
-
     for i in range(1, 5001):
         owners.append({
             "owner_id": f"{hospital_id}_O{i}",
             "owner_first_name": fake.first_name(),
             "owner_last_name": fake.last_name(),
+            "owner_gender": random.choice(["Male", "Female"]),
+            "owner_dob": fake.date_between(start_date="-70y", end_date="-18y"),
             "owner_phone": fake.msisdn()[:10],
             "owner_email": fake.email(),
-            "owner_address": fake.street_address(),
+            "owner_address": fake.street_address().replace("\n", ", "),
             "owner_city": fake.city(),
             "owner_state": fake.state(),
         })
 
-    # Create pets and link them to owners
-    pets = []
+    doctors = []
+    for i in range(1, 101):
+        doctors.append({
+            "doctor_id": f"{hospital_id}_D{i}",
+            "doctor_first_name": fake.first_name(),
+            "doctor_last_name": fake.last_name(),
+            "doctor_gender": random.choice(["Male", "Female"]),
+            "doctor_dob": fake.date_between(start_date="-65y", end_date="-25y"),
+            "doctor_phone": fake.msisdn()[:10],
+            "doctor_email": fake.email(),
+            "doctor_address": fake.street_address().replace("\n", ", "),
+            "doctor_city": fake.city(),
+            "doctor_state": fake.state(),
+            "doctor_specialization": random.choice(specializations),
+        })
 
+    pets = []
     for i in range(1, 10001):
         owner = random.choice(owners)
-
         species = random.choice(species_list)
 
         pets.append({
@@ -312,10 +431,11 @@ def generate_base_data(hospital_id: str, hospital_name: str, rows: int) -> pd.Da
             "birth_date": fake.date_between(start_date="-15y", end_date="-1y"),
             "weight_kg": round(random.uniform(1, 45), 2),
             "microchip_number": fake.uuid4(),
-
             "owner_id": owner["owner_id"],
             "owner_first_name": owner["owner_first_name"],
             "owner_last_name": owner["owner_last_name"],
+            "owner_gender": owner["owner_gender"],
+            "owner_dob": owner["owner_dob"],
             "owner_phone": owner["owner_phone"],
             "owner_email": owner["owner_email"],
             "owner_address": owner["owner_address"],
@@ -323,11 +443,11 @@ def generate_base_data(hospital_id: str, hospital_name: str, rows: int) -> pd.Da
             "owner_state": owner["owner_state"],
         })
 
-    # Generate visits
     data = []
 
     for i in range(1, rows + 1):
         pet = random.choice(pets)
+        doctor = random.choice(doctors)
 
         invoice_amount = round(random.uniform(500, 15000), 2)
         diagnosis_code, diagnosis_description = random.choice(diagnosis_list)
@@ -335,50 +455,33 @@ def generate_base_data(hospital_id: str, hospital_name: str, rows: int) -> pd.Da
         data.append({
             "visit_id": f"{hospital_id}_V{i}",
             "visit_date": fake.date_between(start_date="-2y", end_date="today"),
-
-            "hospital_id": hospital_id,
-            "hospital_name": hospital_name,
-
-            "pet_id": pet["pet_id"],
-            "pet_name": pet["pet_name"],
-            "species": pet["species"],
-            "breed": pet["breed"],
-            "gender": pet["gender"],
-            "birth_date": pet["birth_date"],
-            "weight_kg": pet["weight_kg"],
-            "microchip_number": pet["microchip_number"],
-
-            "owner_id": pet["owner_id"],
-            "owner_first_name": pet["owner_first_name"],
-            "owner_last_name": pet["owner_last_name"],
-            "owner_phone": pet["owner_phone"],
-            "owner_email": pet["owner_email"],
-            "owner_address": pet["owner_address"],
-            "owner_city": pet["owner_city"],
-            "owner_state": pet["owner_state"],
-
-            "doctor_id": f"{hospital_id}_D{random.randint(1, 100)}",
-            "doctor_name": fake.name(),
-            "doctor_specialization": random.choice(specializations),
-
+            **hospital,
+            **pet,
+            "doctor_id": doctor["doctor_id"],
+            "doctor_first_name": doctor["doctor_first_name"],
+            "doctor_last_name": doctor["doctor_last_name"],
+            "doctor_gender": doctor["doctor_gender"],
+            "doctor_dob": doctor["doctor_dob"],
+            "doctor_phone": doctor["doctor_phone"],
+            "doctor_email": doctor["doctor_email"],
+            "doctor_address": doctor["doctor_address"],
+            "doctor_city": doctor["doctor_city"],
+            "doctor_state": doctor["doctor_state"],
+            "doctor_specialization": doctor["doctor_specialization"],
             "appointment_type": random.choice(appointment_types),
             "diagnosis_code": diagnosis_code,
             "diagnosis_description": diagnosis_description,
-
             "treatment_id": f"{hospital_id}_T{i}",
             "treatment_name": random.choice(treatment_list),
             "medication_name": random.choice(["MedA", "MedB", "MedC"]),
             "dosage": random.choice(["5mg", "10mg", "20mg"]),
-
             "invoice_id": f"{hospital_id}_I{i}",
             "invoice_amount": invoice_amount,
             "tax_amount": round(invoice_amount * 0.18, 2),
             "discount_amount": round(random.uniform(0, 500), 2),
-
             "payment_method": random.choice(payment_methods),
             "payment_status": random.choice(payment_statuses),
             "insurance_provider": random.choice(["None", "PetCare", "VetSecure"]),
-
             "created_timestamp": datetime.now(),
             "updated_timestamp": datetime.now(),
         })
@@ -405,11 +508,9 @@ def apply_hospital_schema(df: pd.DataFrame, column_mapping: dict) -> pd.DataFram
 
 def build_s3_key(hospital_folder: str, file_prefix: str) -> str:
     today = datetime.now()
-
     date_folder = today.strftime("%Y-%m-%d")
     timestamp = today.strftime("%Y%m%d_%H%M%S")
-
-    file_name = f"{file_prefix}_{timestamp}.csv"
+    file_name = f"{file_prefix}_{timestamp}_001.csv"
 
     return f"raw/{hospital_folder}/{date_folder}/{file_name}"
 
@@ -420,17 +521,14 @@ def upload_to_s3(df: pd.DataFrame, hospital_folder: str, file_prefix: str) -> No
     csv_buffer = StringIO()
     df.to_csv(csv_buffer, index=False)
 
-    s3_client = boto3.client("s3")
     s3_client.put_object(
         Bucket=BUCKET_NAME,
         Key=s3_key,
         Body=csv_buffer.getvalue(),
     )
-
-def generate_for_hospital(hospital_key: str, config: dict) -> None:
+def generate_for_hospital(config: dict) -> None:
     base_df = generate_base_data(
-        hospital_id=config["hospital_id"],
-        hospital_name=config["hospital_name"],
+        config=config,
         rows=TOTAL_ROWS_PER_HOSPITAL,
     )
 
@@ -448,10 +546,9 @@ def generate_for_hospital(hospital_key: str, config: dict) -> None:
     )
 
 def main() -> None:
-    for hospital_key, config in HOSPITAL_CONFIGS.items():
-        generate_for_hospital(hospital_key, config)
+    for config in HOSPITAL_CONFIGS.values():
+        generate_for_hospital(config)
 
 
 if __name__ == "__main__":
     main()
- 
