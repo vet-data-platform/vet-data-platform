@@ -7,7 +7,9 @@ from pyspark.sql.functions import (
     to_json,
     struct
 )
+from pyspark.sql import SparkSession
 
+spark = SparkSession.getActiveSession()
 
 def load_bronze(source):
 
@@ -24,7 +26,7 @@ def load_bronze(source):
 
     df = (
         df
-        .withColumn("raw_json", to_json(struct(*df.columns)))
+        # .withColumn("raw_json", to_json(struct(*df.columns)))
         .withColumn("ingest_file_path", col("_metadata.file_path"))
         .withColumn("ingest_load_ts", current_timestamp())
         .withColumn(
@@ -35,23 +37,11 @@ def load_bronze(source):
                 1
             )
         )
-        .withColumn(
-            "record_hash",
-            sha2(
-                concat_ws(
-                    "||",
-                    col("ingest_file_path"),
-                    col("raw_json")
-                ),
-                256
-            )
-        )
-    )
 
-    return df.select(
-        "raw_json",
-        "ingest_file_path",
-        "source_system",
-        "ingest_load_ts",
-        "record_hash"
+    return df.withColumn(
+    "record_hash",
+    sha2(
+        concat_ws("||", *[col(c).cast("string") for c in df.columns]),
+        256
     )
+)
