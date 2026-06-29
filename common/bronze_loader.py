@@ -37,7 +37,7 @@ def load_bronze(source):
                 1
             )
         )
-
+    )
     return df.withColumn(
     "record_hash",
     sha2(
