@@ -21,34 +21,28 @@ ENTITY_SCHEMAS = {
     "hospital": StructType([
         StructField("hospital_id", StringType(), True),
         StructField("hospital_name", StringType(), True),
-        StructField("hospital_type", StringType(), True),
         StructField("address", StringType(), True),
-        StructField("city", StringType(), True),
-        StructField("state", StringType(), True),
-        StructField("country", StringType(), True),
-        StructField("postal_code", StringType(), True),
         StructField("phone", StringType(), True),
         StructField("email", StringType(), True),
         *METADATA_FIELDS
     ]),
 
     "user": StructType([
-        StructField("user_id", StringType(), True),
-        StructField("user_type", StringType(), True),
-        StructField("first_name", StringType(), True),
-        StructField("last_name", StringType(), True),
-        StructField("gender", StringType(), True),
-        StructField("dob", DateType(), True),
-        StructField("email", StringType(), True),
-        StructField("phone", StringType(), True),
-        StructField("address", StringType(), True),
-        StructField("city", StringType(), True),
-        StructField("state", StringType(), True),
-        StructField("postal_code", StringType(), True),
-        StructField("specialization", StringType(), True),
-        StructField("license_number", StringType(), True),
-        StructField("hospital_id", StringType(), True),
-        *METADATA_FIELDS
+    StructField("user_id", StringType(), True),
+    StructField("user_type", StringType(), True),
+    StructField("first_name", StringType(), True),
+    StructField("last_name", StringType(), True),
+    StructField("gender", StringType(), True),
+    StructField("dob", DateType(), True),
+    StructField("email", StringType(), True),
+    StructField("phone", StringType(), True),
+    StructField("address", StringType(), True),
+    StructField("city", StringType(), True),
+    StructField("state", StringType(), True),
+    StructField("specialization", StringType(), True),
+    StructField("license_number", StringType(), True),
+    StructField("hospital_id", StringType(), True),
+    *METADATA_FIELDS
     ]),
 
     "pet": StructType([
@@ -63,7 +57,6 @@ ENTITY_SCHEMAS = {
         StructField("weight", DoubleType(), True),
         StructField("color", StringType(), True),
         StructField("microchip_number", StringType(), True),
-        StructField("vaccination_status", StringType(), True),
         *METADATA_FIELDS
     ]),
 

@@ -12,7 +12,8 @@ from pyspark.sql.functions import (
 )
 from pyspark.sql.window import Window
 from common.config_loader import get_enabled_sources
-from common.schema import ENTITY_SCHEMAS, METADATA_FIELDS
+from common.schema import ENTITY_SCHEMAS
+from functools import reduce
 
 spark = SparkSession.getActiveSession()
 
@@ -116,21 +117,93 @@ def _load_all_sources():
         raise ValueError("No enabled sources found in config/sources.yaml")
     return master_df
 
-
 def get_entity_df(entity_name: str):
-    entity_columns = ENTITY_SCHEMAS.get(entity_name)
     if entity_name not in ENTITY_SCHEMAS:
         raise ValueError(f"Unknown entity: {entity_name}")
-
     df = _load_all_sources()
+    # Special handling for User entity
+    if entity_name == "user":
+        df = _build_user_df(df)
     entity_columns = ENTITY_SCHEMAS[entity_name]
     df = _ensure_columns(df, entity_columns)
-    return _deduplicate(df, PRIMARY_KEYS[entity_name]) if entity_name in PRIMARY_KEYS else df
+    if entity_name in PRIMARY_KEYS:
+        df = _deduplicate(df, PRIMARY_KEYS[entity_name])
 
-def _deduplicate(df, primary_keys):
-    window = Window.partitionBy(*primary_keys).orderBy(desc("ingest_timestamp"))
-    return (
-        df.withColumn("rn", row_number().over(window))
-          .filter(col("rn") == 1)
-          .drop("rn")
+    return df
+
+# def _deduplicate(df, primary_keys):
+#     window = Window.partitionBy(*primary_keys).orderBy(desc("ingest_timestamp"))
+#     return (
+#         df.withColumn("rn", row_number().over(window))
+#           .filter(col("rn") == 1)
+#           .drop("rn")
+#     )
+
+def _build_user_df(df):
+    """
+    Builds a normalized user dataframe by combining
+    Owners and Doctors into a single user entity.
+    """
+
+    owner_df = (
+        df.select(
+            col("owner_id").alias("user_id"),
+            lit("OWNER").alias("user_type"),
+            col("owner_first_name").alias("first_name"),
+            col("owner_last_name").alias("last_name"),
+            col("owner_gender").alias("gender"),
+            col("owner_dob").alias("dob"),
+            col("owner_email").alias("email"),
+            col("owner_phone").alias("phone"),
+            col("owner_address").alias("address"),
+            col("owner_city").alias("city"),
+            col("owner_state").alias("state"),
+            col("hospital_id"),
+            col("source_system"),
+            col("ingest_date"),
+            col("ingest_timestamp"),
+            col("file_name"),
+            col("record_hash")
+        )
     )
+
+    doctor_df = (
+        df.select(
+            col("doctor_id").alias("user_id"),
+            lit("DOCTOR").alias("user_type"),
+            col("doctor_first_name").alias("first_name"),
+            col("doctor_last_name").alias("last_name"),
+            col("doctor_gender").alias("gender"),
+            col("doctor_dob").alias("dob"),
+            col("doctor_email").alias("email"),
+            col("doctor_phone").alias("phone"),
+            col("doctor_address").alias("address"),
+            col("doctor_city").alias("city"),
+            col("doctor_state").alias("state"),
+            col("doctor_specialization").alias("specialization"),
+            col("hospital_id"),
+            col("source_system"),
+            col("ingest_date"),
+            col("ingest_timestamp"),
+            col("file_name"),
+            col("record_hash")
+        )
+    )
+
+    return (
+        owner_df
+        .unionByName(doctor_df, allowMissingColumns=True)
+    )
+def _deduplicate(df, primary_keys):
+
+    if not primary_keys:
+        return df
+
+    condition = reduce(
+        lambda x, y: x & y,
+        [col(pk).isNotNull() for pk in primary_keys]
+    )
+
+    df = df.filter(condition)
+
+    return df.dropDuplicates(primary_keys)
