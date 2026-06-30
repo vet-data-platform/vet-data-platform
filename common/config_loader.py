@@ -1,6 +1,6 @@
 import yaml
 
-CONFIG_FILE = "config/sources.yaml"
+CONFIG_FILE = "/Workspace/Users/gururaja.bhat@triconinfotech.com/vet-data-platform/config/sources.yaml"
 
 
 def load_sources():
