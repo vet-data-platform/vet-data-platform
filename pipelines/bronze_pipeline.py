@@ -1,43 +1,47 @@
-import os
 import dlt
-from pyspark.sql.functions import current_timestamp, col, regexp_extract, sha2, concat_ws, to_json, struct
-from pyspark.sql.types import StringType
+from common.bronze_loader import get_entity_df
 
-RAW_BASE_PATH = os.getenv("RAW_BASE_PATH", "s3a://vet-data-platform/raw/")
 
 @dlt.table(
-    comment="Raw bronze layer for hospital files with variable source schemas.",
+    name="bronze_hospital",
+    comment="Bronze layer for hospital master data",
     table_properties={"quality": "bronze"}
 )
-def bronze_hospitals_raw():
-    """Ingest raw hospital file lines and preserve file metadata, avoiding schema union nulls."""
-    raw = (
-        spark.readStream
-            .format("cloudFiles")
-            .option("cloudFiles.format", "csv")
-            # .option("cloudFiles.schemaLocation", SCHEMA_LOCATION)
-            .option("cloudFiles.inferColumnTypes", "true")
-            .option("cloudFiles.schemaEvolutionMode", "addNewColumns")
-            .option("recursiveFileLookup", "true")
-            .option("header", "true")
-            .load(RAW_BASE_PATH)
-    )
+def bronze_hospital():
+    return get_entity_df("hospital")
 
-    raw = raw.withColumn("raw_json", to_json(struct(*raw.columns)))
-    raw = raw.withColumn("ingest_file_path", col("_metadata.file_path"))
-    raw = raw.withColumn("ingest_load_ts", current_timestamp())
-    raw = raw.withColumn(
-        "source_system",
-        regexp_extract(col("_metadata.file_path"), ".*/raw/([^/]+)/.*", 1)
-    )
 
-    return raw.withColumn(
-        "record_hash",
-        sha2(concat_ws("||", col("raw_json"), col("ingest_file_path")), 256)
-    ).select(
-        "raw_json",
-        "ingest_file_path",
-        "source_system",
-        "ingest_load_ts",
-        "record_hash"
-    )
+@dlt.table(
+    name="bronze_user",
+    comment="Bronze layer for all users (owners and doctors)",
+    table_properties={"quality": "bronze"}
+)
+def bronze_user():
+    return get_entity_df("user")
+
+
+@dlt.table(
+    name="bronze_pet",
+    comment="Bronze layer for pet master data",
+    table_properties={"quality": "bronze"}
+)
+def bronze_pet():
+    return get_entity_df("pet")
+
+
+@dlt.table(
+    name="bronze_visit",
+    comment="Bronze layer for pet visit and appointment details",
+    table_properties={"quality": "bronze"}
+)
+def bronze_visit():
+    return get_entity_df("visit")
+
+
+@dlt.table(
+    name="bronze_invoice",
+    comment="Bronze layer for invoice and billing details",
+    table_properties={"quality": "bronze"}
+)
+def bronze_invoice():
+    return get_entity_df("invoice")

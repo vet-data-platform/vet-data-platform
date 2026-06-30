@@ -8,3 +8,4 @@ uvicorn>=0.30.0
 databricks-sdk>=0.55.0
 databricks-sql-connector>=3.2.0
 python-dotenv>=1.0.1
+PyYAML
