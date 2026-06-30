@@ -71,6 +71,10 @@ ENTITY_SCHEMAS = {
         StructField("diagnosis_description", StringType(), True),
         StructField("treatment_notes", StringType(), True),
         StructField("visit_status", StringType(), True),
+        StructField("treatment_id", StringType(), True),
+        StructField("treatment_name", StringType(), True),
+        StructField("medication_name", StringType(), True),
+        StructField("dosage", StringType(), True),
         *METADATA_FIELDS
     ]),
 
