@@ -21,9 +21,9 @@ ENTITY_SCHEMAS = {
     "hospital": StructType([
         StructField("hospital_id", StringType(), True),
         StructField("hospital_name", StringType(), True),
-        StructField("address", StringType(), True),
-        StructField("phone", StringType(), True),
-        StructField("email", StringType(), True),
+        StructField("hospital_address", StringType(), True),
+        StructField("hospital_phone", StringType(), True),
+        StructField("hospital_email", StringType(), True),
         *METADATA_FIELDS
     ]),
 
@@ -55,7 +55,6 @@ ENTITY_SCHEMAS = {
         StructField("gender", StringType(), True),
         StructField("birth_date", DateType(), True),
         StructField("weight", DoubleType(), True),
-        StructField("color", StringType(), True),
         StructField("microchip_number", StringType(), True),
         *METADATA_FIELDS
     ]),
@@ -63,13 +62,13 @@ ENTITY_SCHEMAS = {
     "visit": StructType([
         StructField("visit_id", StringType(), True),
         StructField("pet_id", StringType(), True),
-        StructField("doctor_user_id", StringType(), True),
+        StructField("doctor_id", StringType(), True),
         StructField("hospital_id", StringType(), True),
         StructField("visit_date", DateType(), True),
         StructField("visit_time", TimestampType(), True),
         StructField("appointment_type", StringType(), True),
-        StructField("diagnosis", StringType(), True),
-        StructField("symptoms", StringType(), True),
+        StructField("diagnosis_code", StringType(), True),
+        StructField("diagnosis_description", StringType(), True),
         StructField("treatment_notes", StringType(), True),
         StructField("visit_status", StringType(), True),
         *METADATA_FIELDS

@@ -124,6 +124,10 @@ def get_entity_df(entity_name: str):
     # Special handling for User entity
     if entity_name == "user":
         df = _build_user_df(df)
+    if entity_name == "pet":
+        df = df.withColumnRenamed("owner_id", "user_id")
+        df = df.withColumnRenamed("weight_kg", "weight")
+
     entity_columns = ENTITY_SCHEMAS[entity_name]
     df = _ensure_columns(df, entity_columns)
     if entity_name in PRIMARY_KEYS:
