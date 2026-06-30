@@ -1,6 +1,8 @@
+import os
 import yaml
 
-CONFIG_FILE = "/Workspace/Users/gururaja.bhat@triconinfotech.com/vet-data-platform/config/sources.yaml"
+_PROJECT_ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+CONFIG_FILE = os.path.join(_PROJECT_ROOT, "config", "sources.yaml")
 
 
 def load_sources():
