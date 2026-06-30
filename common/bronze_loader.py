@@ -9,6 +9,7 @@ from pyspark.sql.functions import (
     concat_ws
 )
 from common.config_loader import get_enabled_sources
+from common.schema import ENTITY_SCHEMAS, METADATA_FIELDS
 
 spark = SparkSession.getActiveSession()
 
@@ -19,85 +20,6 @@ HOSPITAL_COLUMN_MAP = {
     'hospital_d': {'encounter_id': 'visit_id', 'encounter_date': 'visit_date', 'branch_id': 'hospital_id', 'branch_name': 'hospital_name', 'branch_address': 'hospital_address', 'branch_phone': 'hospital_phone', 'branch_email': 'hospital_email', 'pet_identifier': 'pet_id', 'pet_full_name': 'pet_name', 'species_name': 'species', 'breed_name': 'breed', 'gender_code': 'gender', 'birth_dt': 'birth_date', 'weight_in_kg': 'weight_kg', 'microchip_id': 'microchip_number', 'owner_identifier': 'owner_id', 'owner_first': 'owner_first_name', 'owner_last': 'owner_last_name', 'owner_gender': 'owner_gender', 'owner_birth_date': 'owner_dob', 'phone_number': 'owner_phone', 'email': 'owner_email', 'street': 'owner_address', 'city': 'owner_city', 'state': 'owner_state', 'doctor_identifier': 'doctor_id', 'doctor_first': 'doctor_first_name', 'doctor_last': 'doctor_last_name', 'doctor_gender': 'doctor_gender', 'doctor_birth_date': 'doctor_dob', 'doctor_phone_number': 'doctor_phone', 'doctor_email': 'doctor_email', 'doctor_street': 'doctor_address', 'doctor_city': 'doctor_city', 'doctor_state': 'doctor_state', 'specialization': 'doctor_specialization', 'encounter_type': 'appointment_type', 'procedure_code': 'diagnosis_code', 'procedure_description': 'diagnosis_description', 'treatment_ref': 'treatment_id', 'treatment_desc': 'treatment_name', 'prescribed_medication': 'medication_name', 'prescribed_dosage': 'dosage', 'invoice_number': 'invoice_id', 'gross_amount': 'invoice_amount', 'tax_amount': 'tax_amount', 'discount_amount': 'discount_amount', 'payment_method': 'payment_method', 'payment_status': 'payment_status', 'insurance_provider': 'insurance_provider', 'created_on': 'created_timestamp', 'updated_on': 'updated_timestamp'}, 
     'hospital_e': {'case_id': 'visit_id', 'case_date': 'visit_date', 'center_id': 'hospital_id', 'center_name': 'hospital_name', 'center_address': 'hospital_address', 'center_phone': 'hospital_phone', 'center_email': 'hospital_email', 'pet_code': 'pet_id', 'pet_nickname': 'pet_name', 'species_category': 'species', 'breed_category': 'breed', 'sex_code': 'gender', 'date_of_birth': 'birth_date', 'current_weight': 'weight_kg', 'rfid_tag': 'microchip_number', 'guardian_id': 'owner_id', 'guardian_first_name': 'owner_first_name', 'guardian_last_name': 'owner_last_name', 'guardian_gender': 'owner_gender', 'guardian_dob': 'owner_dob', 'guardian_contact': 'owner_phone', 'guardian_email': 'owner_email', 'guardian_address': 'owner_address', 'guardian_city': 'owner_city', 'guardian_state': 'owner_state', 'staff_id': 'doctor_id', 'staff_first_name': 'doctor_first_name', 'staff_last_name': 'doctor_last_name', 'staff_gender': 'doctor_gender', 'staff_dob': 'doctor_dob', 'staff_contact': 'doctor_phone', 'staff_email': 'doctor_email', 'staff_address': 'doctor_address', 'staff_city': 'doctor_city', 'staff_state': 'doctor_state', 'staff_role': 'doctor_specialization', 'case_type': 'appointment_type', 'diagnosis_id': 'diagnosis_code', 'diagnosis_text': 'diagnosis_description', 'care_plan_id': 'treatment_id', 'care_plan': 'treatment_name', 'medication': 'medication_name', 'dosage': 'dosage', 'charge_id': 'invoice_id', 'total_charge': 'invoice_amount', 'tax_charge': 'tax_amount', 'discount_charge': 'discount_amount', 'settlement_mode': 'payment_method', 'settlement_status': 'payment_status', 'insurance_provider': 'insurance_provider', 'created_ts': 'created_timestamp', 'updated_ts': 'updated_timestamp'}
 }
-ENTITY_COLUMNS = {
-    "hospital": [
-        "hospital_id",
-        "hospital_name",
-        "hospital_type",
-        "address",
-        "city",
-        "state",
-        "country",
-        "postal_code",
-        "phone",
-        "email"
-    ],
-    "user": [
-        "user_id",
-        "user_type",
-        "first_name",
-        "last_name",
-        "gender",
-        "dob",
-        "email",
-        "phone",
-        "address",
-        "city",
-        "state",
-        "postal_code",
-        "specialization",
-        "license_number",
-        "hospital_id"
-    ],
-    "pet": [
-        "pet_id",
-        "user_id",
-        "hospital_id",
-        "pet_name",
-        "species",
-        "breed",
-        "gender",
-        "birth_date",
-        "weight",
-        "color",
-        "microchip_number",
-        "vaccination_status"
-    ],
-    "visit": [
-        "visit_id",
-        "pet_id",
-        "doctor_user_id",
-        "hospital_id",
-        "visit_date",
-        "visit_time",
-        "appointment_type",
-        "diagnosis",
-        "symptoms",
-        "treatment_notes",
-        "visit_status"
-    ],
-    "invoice": [
-        "invoice_id",
-        "visit_id",
-        "hospital_id",
-        "invoice_date",
-        "invoice_amount",
-        "tax_amount",
-        "discount_amount",
-        "net_amount",
-        "payment_method",
-        "payment_status",
-        "insurance_provider"
-    ]
-}
-
-METADATA_COLUMNS = [
-    "source_system",
-    "ingest_date",
-    "ingest_timestamp",
-    "file_name",
-    "record_hash"
-]
 
 
 def _drop_duplicate_columns(df):
@@ -142,14 +64,14 @@ def _with_record_hash(df):
     return df.withColumn("record_hash", sha2(concat_ws("||", *hash_columns), 256))
 
 
-def _ensure_columns(df, columns):
+def _ensure_columns(df, schema):
+    existing = set(df.columns)
     expressions = []
-    existing_columns = set(df.columns)
-    for column_name in columns:
-        if column_name in existing_columns:
-            expressions.append(col(column_name))
+    for field in schema.fields:
+        if field.name in existing:
+            expressions.append(col(field.name).cast(field.dataType).alias(field.name))
         else:
-            expressions.append(lit(None).cast("string").alias(column_name))
+            expressions.append(lit(None).cast(field.dataType).alias(field.name))
     return df.select(*expressions)
 
 
@@ -185,9 +107,10 @@ def _load_all_sources():
 
 
 def get_entity_df(entity_name: str):
-    if entity_name not in ENTITY_COLUMNS:
+    entity_columns = ENTITY_SCHEMAS.get(entity_name)
+    if entity_name not in entity_columns:
         raise ValueError(f"Unknown entity: {entity_name}")
 
     df = _load_all_sources()
-    entity_columns = ENTITY_COLUMNS[entity_name] + METADATA_COLUMNS
+    entity_columns = ENTITY_SCHEMAS[entity_name] + METADATA_FIELDS
     return _ensure_columns(df, entity_columns)
