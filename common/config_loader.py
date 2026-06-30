@@ -1,6 +1,6 @@
 import yaml
 
-CONFIG_FILE = "config/sources.yml"
+CONFIG_FILE = "config/sources.yaml"
 
 
 def load_sources():
@@ -12,7 +12,7 @@ def get_source(source_name: str):
     sources = load_sources()
 
     if source_name not in sources:
-        raise ValueError(f"{source_name} not found in sources.yml")
+        raise ValueError(f"{source_name} not found in sources.yaml")
 
     source = sources[source_name]
 
@@ -20,3 +20,11 @@ def get_source(source_name: str):
         raise ValueError(f"{source_name} is disabled")
 
     return source
+
+
+def get_enabled_sources():
+    return {
+        name: source
+        for name, source in load_sources().items()
+        if source.get("enabled", False)
+    }
