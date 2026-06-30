@@ -16,3 +16,15 @@ sources:
     path: s3://vet-data-platform/raw/hospital_c
     schema_location: dbfs:/FileStore/schema/hospital_c
     source_system: hospital_c
+
+  hospital_d:
+    enabled: true
+    path: s3://vet-data-platform/raw/hospital_d
+    schema_location: dbfs:/FileStore/schema/hospital_d
+    source_system: hospital_d
+  
+  hospital_e:
+    enabled: true
+    path: s3://vet-data-platform/raw/hospital_e
+    schema_location: dbfs:/FileStore/schema/hospital_e
+    source_system: hospital_e
