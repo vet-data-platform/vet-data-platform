@@ -324,7 +324,7 @@ def treatment_fact():
             "source_system",
             "ingest_timestamp"
         )
-        .join(visit_fact_df, "visit_id", "left")
+        .join(visit_fact_df, "visit_id", "inner")
         .join(medication, "medication_id", "left")
         .select(
             "treatment_id",
@@ -361,7 +361,7 @@ def invoice_fact():
             col("invoice_amount").isNotNull() &
             (col("invoice_amount") >= 0)
         )
-        .join(visit, "visit_id", "left")
+        .join(visit, "visit_id", "inner")
         .withColumn(
             "net_amount",
             col("invoice_amount") + col("tax_amount") - col("discount_amount")
