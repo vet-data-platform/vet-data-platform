@@ -28,21 +28,21 @@ ENTITY_SCHEMAS = {
     ]),
 
     "user": StructType([
-    StructField("user_id", StringType(), True),
-    StructField("user_type", StringType(), True),
-    StructField("first_name", StringType(), True),
-    StructField("last_name", StringType(), True),
-    StructField("gender", StringType(), True),
-    StructField("dob", DateType(), True),
-    StructField("email", StringType(), True),
-    StructField("phone", StringType(), True),
-    StructField("address", StringType(), True),
-    StructField("city", StringType(), True),
-    StructField("state", StringType(), True),
-    StructField("specialization", StringType(), True),
-    StructField("license_number", StringType(), True),
-    StructField("hospital_id", StringType(), True),
-    *METADATA_FIELDS
+        StructField("user_id", StringType(), True),
+        StructField("user_type", StringType(), True),
+        StructField("first_name", StringType(), True),
+        StructField("last_name", StringType(), True),
+        StructField("gender", StringType(), True),
+        StructField("dob", DateType(), True),
+        StructField("email", StringType(), True),
+        StructField("phone", StringType(), True),
+        StructField("address", StringType(), True),
+        StructField("city", StringType(), True),
+        StructField("state", StringType(), True),
+        StructField("specialization", StringType(), True),
+        StructField("license_number", StringType(), True),
+        StructField("hospital_id", StringType(), True),
+        *METADATA_FIELDS
     ]),
 
     "pet": StructType([
