@@ -20,7 +20,7 @@ s3_client = boto3.client(
 fake = Faker("en_IN")
 
 BUCKET_NAME = "vet-data-platform"
-TOTAL_ROWS_PER_HOSPITAL = 50000
+TOTAL_ROWS_PER_HOSPITAL = 30000
 
 
 HOSPITAL_CONFIGS = {
@@ -387,7 +387,7 @@ def generate_base_data(config: dict, rows: int) -> pd.DataFrame:
     ]
 
     owners = []
-    for i in range(1, 5001):
+    for i in range(1, 2501):
         owners.append({
             "owner_id": f"{hospital_id}_O{i}",
             "owner_first_name": fake.first_name(),
@@ -402,7 +402,7 @@ def generate_base_data(config: dict, rows: int) -> pd.DataFrame:
         })
 
     doctors = []
-    for i in range(1, 101):
+    for i in range(1, 51):
         doctors.append({
             "doctor_id": f"{hospital_id}_D{i}",
             "doctor_first_name": fake.first_name(),
@@ -418,7 +418,7 @@ def generate_base_data(config: dict, rows: int) -> pd.DataFrame:
         })
 
     pets = []
-    for i in range(1, 10001):
+    for i in range(1, 3501):
         owner = random.choice(owners)
         species = random.choice(species_list)
 
@@ -491,12 +491,12 @@ def generate_base_data(config: dict, rows: int) -> pd.DataFrame:
 def inject_controlled_messy_data(df: pd.DataFrame) -> pd.DataFrame:
     df = df.copy()
 
-    df.loc[df.sample(frac=0.02).index, "pet_name"] = None
-    df.loc[df.sample(frac=0.02).index, "owner_email"] = "invalid_email"
-    df.loc[df.sample(frac=0.01).index, "invoice_amount"] *= -1
-    df.loc[df.sample(frac=0.01).index, "doctor_id"] = None
+    df.loc[df.sample(frac=0.005).index, "pet_name"] = None
+    df.loc[df.sample(frac=0.005).index, "owner_email"] = "invalid_email"
+    df.loc[df.sample(frac=0.005).index, "invoice_amount"] *= -1
+    df.loc[df.sample(frac=0.005).index, "doctor_id"] = None
 
-    duplicates = df.sample(frac=0.02)
+    duplicates = df.sample(frac=0.005)
     df = pd.concat([df, duplicates], ignore_index=True)
 
     return df

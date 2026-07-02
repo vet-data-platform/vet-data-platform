@@ -115,7 +115,7 @@ def get_entity_df(entity_name: str):
     entity_columns = ENTITY_SCHEMAS[entity_name]
     df = _ensure_columns(df, entity_columns)
     if entity_name in PRIMARY_KEYS:
-        df = _deduplicate(df, PRIMARY_KEYS[entity_name])
+        df = _validate_data(df, PRIMARY_KEYS[entity_name])
 
     return df
 
@@ -176,16 +176,19 @@ def _build_user_df(df):
         .unionByName(doctor_df, allowMissingColumns=True)
     )
 
-def _deduplicate(df, primary_keys):
+def _validate_data(df, primary_keys):
 
     if not primary_keys:
         return df
-
+    #primary key validation
     condition = reduce(
         lambda x, y: x & y,
         [col(pk).isNotNull() for pk in primary_keys]
     )
-
     df = df.filter(condition)
+    
+    #dropping duplicate records based on all columns
+    dedup_cols = list(set(df.columns) - set(["record_hash", "ingest_timestamp"]))
+    df = df.dropDuplicates(dedup_cols)
 
-    return df.dropDuplicates(primary_keys)
+    return df
